@@ -30,6 +30,10 @@ public class PlayerController : MonoBehaviour
     private float verticalVelocity;
     private Vector3 moveDirection; // 当前帧的移动方向
     
+    // 重生相关变量
+    private Vector3 spawnPosition;
+    private Quaternion spawnRotation;
+    
     void Start()
     {
         // 获取CharacterController组件
@@ -49,6 +53,10 @@ public class PlayerController : MonoBehaviour
         {
             Debug.LogWarning("PlayerController: 未找到主相机，将使用世界坐标系移动");
         }
+        
+        // 记录初始位置和旋转（用于重生）
+        spawnPosition = transform.position;
+        spawnRotation = transform.rotation;
     }
     
     void Update()
@@ -139,6 +147,49 @@ public class PlayerController : MonoBehaviour
     }
     
     /// <summary>
+    /// 重生方法 - 使角色回到初始位置
+    /// </summary>
+    public void Respawn()
+    {
+        // 禁用CharacterController以允许直接设置位置
+        characterController.enabled = false;
+        
+        // 重置位置和旋转
+        transform.position = spawnPosition;
+        transform.rotation = spawnRotation;
+        
+        // 重置垂直速度
+        verticalVelocity = 0f;
+        velocity = Vector3.zero;
+        moveDirection = Vector3.zero;
+        
+        // 重新启用CharacterController
+        characterController.enabled = true;
+        
+        Debug.Log("玩家已重生到初始位置");
+    }
+    
+    /// <summary>
+    /// 设置重生点（可供外部调用，用于设置检查点）
+    /// </summary>
+    public void SetSpawnPoint(Vector3 newSpawnPosition, Quaternion newSpawnRotation)
+    {
+        spawnPosition = newSpawnPosition;
+        spawnRotation = newSpawnRotation;
+        Debug.Log($"重生点已更新到：{spawnPosition}");
+    }
+    
+    /// <summary>
+    /// 设置重生点（重载方法，只设置位置）
+    /// </summary>
+    public void SetSpawnPoint(Vector3 newSpawnPosition)
+    {
+        spawnPosition = newSpawnPosition;
+        spawnRotation = transform.rotation;
+        Debug.Log($"重生点已更新到：{spawnPosition}");
+    }
+    
+    /// <summary>
     /// 在编辑器中绘制调试信息
     /// </summary>
     void OnDrawGizmosSelected()
@@ -152,6 +203,14 @@ public class PlayerController : MonoBehaviour
         {
             Gizmos.color = characterController.isGrounded ? Color.green : Color.red;
             Gizmos.DrawWireSphere(transform.position, 0.5f);
+        }
+        
+        // 绘制重生点位置（在运行时和编辑器中）
+        if (Application.isPlaying)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(spawnPosition, 0.7f);
+            Gizmos.DrawLine(spawnPosition, spawnPosition + Vector3.up * 2f);
         }
     }
 }
