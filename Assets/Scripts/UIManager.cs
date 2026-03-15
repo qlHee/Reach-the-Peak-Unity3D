@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// UI管理器 - 负责更新游戏界面
@@ -32,8 +33,19 @@ public class UIManager : MonoBehaviour
     
     [Tooltip("陷阱提示渐变时间（秒）")]
     public float trapHintFadeDuration = 0.3f;
+
+    [Header("阶段提示设置")]
+    [Tooltip("阶段提示文本（例如：Phase2: Middle）")]
+    public TextMeshProUGUI phaseText;
+
+    [Tooltip("阶段提示显示时长（秒）")]
+    public float phaseDisplayDuration = 2f;
     
     private Coroutine trapHintCoroutine;
+
+    [Header("通关界面")]
+    [Tooltip("通关界面根对象（包含 Restart / NextLevel 按钮）")]
+    public GameObject winPanel;
 
     void Start()
     {
@@ -65,6 +77,18 @@ public class UIManager : MonoBehaviour
             trapHintCanvasGroup.interactable = false;
             trapHintCanvasGroup.blocksRaycasts = false;
             trapHintText.gameObject.SetActive(false);
+        }
+
+        // 隐藏通关界面
+        if (winPanel != null)
+        {
+            winPanel.SetActive(false);
+        }
+
+        // 隐藏阶段提示文本
+        if (phaseText != null)
+        {
+            phaseText.gameObject.SetActive(false);
         }
     }
 
@@ -132,6 +156,91 @@ public class UIManager : MonoBehaviour
             }
             trapHintCoroutine = StartCoroutine(TrapHintRoutine());
         }
+    }
+
+    /// <summary>
+    /// 显示“需要先收集所有金币”的提示
+    /// </summary>
+    public void ShowCollectRequirementMessage(string message)
+    {
+        if (collectRequirementText != null)
+        {
+            collectRequirementText.text = message;
+            collectRequirementText.gameObject.SetActive(true);
+        }
+        else
+        {
+            Debug.Log(message);
+        }
+    }
+
+    /// <summary>
+    /// 显示阶段提示信息（不会暂停游戏）
+    /// </summary>
+    /// <param name="message">提示信息内容，例如 "Phase2: Middle"</param>
+    public void ShowPhaseMessage(string message)
+    {
+        if (phaseText == null)
+        {
+            Debug.LogWarning("phaseText 未设置！请在 Inspector 中将阶段提示 Text 对象拖入 UIManager。");
+            return;
+        }
+
+        phaseText.text = message;
+        phaseText.gameObject.SetActive(true);
+
+        CancelInvoke(nameof(HidePhaseMessage));
+        Invoke(nameof(HidePhaseMessage), phaseDisplayDuration);
+    }
+
+    /// <summary>
+    /// 隐藏阶段提示信息
+    /// </summary>
+    private void HidePhaseMessage()
+    {
+        if (phaseText != null)
+        {
+            phaseText.gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// 显示通关界面（不再暂停全局 TimeScale，避免按钮无法点击）
+    /// </summary>
+    public void ShowWinPanel()
+    {
+        if (winPanel != null)
+        {
+            winPanel.SetActive(true);
+        }
+        else
+        {
+            Debug.LogWarning("winPanel 未设置！请在 Inspector 中将通关界面对象拖入 UIManager。");
+        }
+    }
+
+    /// <summary>
+    /// 供 Restart 按钮调用：重启当前关卡
+    /// </summary>
+    public void RestartLevel()
+    {
+        // 恢复时间缩放后重新加载当前场景
+        Time.timeScale = 1f;
+        Scene current = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(current.name);
+    }
+
+    /// <summary>
+    /// 供 Next Level 按钮调用：加载下一关（占位实现）
+    /// </summary>
+    public void LoadNextLevel()
+    {
+        // 这里先做占位实现：重新加载当前场景
+        // 未来你可以改为加载真正的下一关（例如按 buildIndex + 1）
+        Debug.Log("LoadNextLevel 被调用，目前作为占位重新加载当前关卡。");
+        Time.timeScale = 1f;
+        Scene current = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(current.name);
     }
 
     /// <summary>
