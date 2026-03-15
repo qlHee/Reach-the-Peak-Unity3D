@@ -3,9 +3,21 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("移动设置")]
-    [Tooltip("角色移动速度")]
-    [Range(3f, 6f)]
-    public float moveSpeed = 5f;
+    [Tooltip("角色最大移动速度")]
+    [Range(3f, 10f)]
+    public float maxMoveSpeed = 5f;
+    
+    [Tooltip("加速度（速度增加的快慢）")]
+    [Range(5f, 20f)]
+    public float acceleration = 10f;
+    
+    [Tooltip("减速度（速度降低的快慢）")]
+    [Range(5f, 20f)]
+    public float deceleration = 10f;
+    
+    [Tooltip("动画速度倍率（调整这个值来匹配 Blend Tree 的 Threshold）")]
+    [Range(0.5f, 2f)]
+    public float animationSpeedMultiplier = 1.5f;
     
     [Tooltip("角色旋转速度")]
     public float rotationSpeed = 10f;
@@ -21,14 +33,23 @@ public class PlayerController : MonoBehaviour
     [Tooltip("重力值")]
     public float gravity = -9.81f;
     
+    [Header("调试设置")]
+    [Tooltip("是否显示屏幕调试信息")]
+    public bool showDebugInfo = true;
+    
     // 组件引用
     private CharacterController characterController;
     private Transform cameraTransform;
+    private Animator anim;
     
     // 移动相关变量
     private Vector3 velocity;
     private float verticalVelocity;
-    private Vector3 moveDirection; // 当前帧的移动方向
+    private Vector3 moveDirection;
+    
+    // 动画速度平滑过渡
+    private float currentAnimSpeed = 0f;
+    private float currentMoveSpeed = 0f;
     
     // 重生相关变量
     private Vector3 spawnPosition;
@@ -53,7 +74,13 @@ public class PlayerController : MonoBehaviour
         {
             Debug.LogWarning("PlayerController: 未找到主相机，将使用世界坐标系移动");
         }
-        
+
+        anim = GetComponent<Animator>();
+        if (anim == null)
+        {
+            Debug.LogWarning("PlayerController: 未找到Animator组件，动画将无法播放");
+        }
+
         // 记录初始位置和旋转（用于重生）
         spawnPosition = transform.position;
         spawnRotation = transform.rotation;
@@ -66,6 +93,17 @@ public class PlayerController : MonoBehaviour
         
         // 处理移动和旋转
         HandleMovement();
+
+        if (anim != null)
+        {
+            currentAnimSpeed = currentMoveSpeed * animationSpeedMultiplier;
+            anim.SetFloat("Speed", currentAnimSpeed);
+        }
+
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            Debug.Log($"IsGrounded: {characterController.isGrounded}, Position Y: {transform.position.y}, Current Move Speed: {currentMoveSpeed:F2}, Current Anim Speed: {currentAnimSpeed:F2}");
+        }
     }
     
     /// <summary>
@@ -111,6 +149,14 @@ public class PlayerController : MonoBehaviour
         if (moveDirection.magnitude >= 0.1f)
         {
             moveDirection.Normalize();
+            
+            // 有输入，加速
+            currentMoveSpeed = Mathf.MoveTowards(currentMoveSpeed, maxMoveSpeed, acceleration * Time.deltaTime);
+        }
+        else
+        {
+            // 无输入，减速
+            currentMoveSpeed = Mathf.MoveTowards(currentMoveSpeed, 0f, deceleration * Time.deltaTime);
         }
     }
     
@@ -134,6 +180,11 @@ public class PlayerController : MonoBehaviour
                 // 根据跳跃高度计算初始跳跃速度
                 // 公式：v = sqrt(2 * jumpHeight * |gravity|)
                 verticalVelocity = Mathf.Sqrt(jumpHeight * 2f * Mathf.Abs(gravity));
+
+                if (anim != null)
+                {
+                    anim.SetTrigger("Jump");
+                }
             }
         }
         
@@ -141,7 +192,7 @@ public class PlayerController : MonoBehaviour
         verticalVelocity += gravity * Time.deltaTime;
         
         // 合并水平移动和垂直移动，一次性执行Move
-        Vector3 finalMove = moveDirection * moveSpeed * Time.deltaTime;
+        Vector3 finalMove = moveDirection * currentMoveSpeed * Time.deltaTime;
         finalMove.y = verticalVelocity * Time.deltaTime;
         characterController.Move(finalMove);
     }
@@ -162,6 +213,8 @@ public class PlayerController : MonoBehaviour
         verticalVelocity = 0f;
         velocity = Vector3.zero;
         moveDirection = Vector3.zero;
+        currentMoveSpeed = 0f;
+        currentAnimSpeed = 0f;
         
         // 重新启用CharacterController
         characterController.enabled = true;
@@ -192,6 +245,32 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// 在编辑器中绘制调试信息
     /// </summary>
+    void OnGUI()
+    {
+        if (!showDebugInfo || !Application.isPlaying)
+            return;
+            
+        GUIStyle style = new GUIStyle();
+        style.fontSize = 20;
+        style.normal.textColor = Color.red;
+        style.alignment = TextAnchor.UpperRight;
+        
+        float targetSpeed = currentMoveSpeed * animationSpeedMultiplier;
+        
+        string info = $"Target Speed: {targetSpeed:F2}\n";
+        info += $"Current Anim Speed: {currentAnimSpeed:F2}\n";
+        info += $"\n";
+        
+        if (currentAnimSpeed < 0.1f)
+            info += "State: IDLE";
+        else if (currentAnimSpeed < 3f)
+            info += "State: WALKING";
+        else
+            info += "State: RUNNING";
+        
+        GUI.Label(new Rect(Screen.width - 310, 10, 300, 100), info, style);
+    }
+    
     void OnDrawGizmosSelected()
     {
         // 绘制移动方向

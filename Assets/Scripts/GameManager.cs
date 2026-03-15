@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
         // 初始化UI显示
         if (uiManager != null)
         {
-			uiManager.SetInfo($"Collected: {collectedCoins} / {totalCoins}");
+            uiManager.UpdateCollectInfo(collectedCoins, totalCoins);
         }
         else
         {
@@ -43,7 +43,7 @@ public class GameManager : MonoBehaviour
         // 更新UI显示
         if (uiManager != null)
         {
-			uiManager.SetInfo($"Collected: {collectedCoins} / {totalCoins}");
+            uiManager.UpdateCollectInfo(collectedCoins, totalCoins);
         }
         
         Debug.Log($"收集金币：{collectedCoins} / {totalCoins}");
@@ -62,42 +62,15 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log(completionMessage);
         
-		// 显示完成提示与胜利界面
+        // 显示完成提示
         if (uiManager != null)
         {
-			uiManager.ShowHint(completionMessage, 2f);
-			uiManager.ShowWin(true);
+            uiManager.ShowCompletionMessage(completionMessage);
         }
         
         // 触发"开启终点门"事件
         OpenExitDoor();
-		
-		// 可选：胜利后暂停游戏
-		// Time.timeScale = 0f;
     }
-	
-	/// <summary>
-	/// 供终点触发器调用的出口尝试逻辑：
-	/// 未收集完则给出提示；收集完成则显示胜利
-	/// </summary>
-	public void TryExit()
-	{
-		if (collectedCoins < totalCoins)
-		{
-			if (uiManager != null)
-			{
-				uiManager.ShowHint("You need to collect all coins first!", 2f);
-			}
-			else
-			{
-				Debug.Log("You need to collect all coins first!");
-			}
-			return;
-		}
-		
-		// 已经集齐，直接触发胜利处理
-		OnAllCoinsCollected();
-	}
 
     /// <summary>
     /// 开启终点门
