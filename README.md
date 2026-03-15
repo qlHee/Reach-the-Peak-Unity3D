@@ -2,18 +2,33 @@
 
 This is a Unity3D game and one of my personal assignments for the Computer Graphics and Game Development course.
 
-## Setup
-
-1. Clone this repository
-2. Download `Reach the Peak-Resources` folder and place it alongside this project
-3. Run setup script:
-   - **macOS/Linux**: [./setup_resources.sh](cci:7://file:///Users/tuxol/Documents/DataVault/CST/%23Unity3D/github/Reach%20the%20Peak-Unity3D/setup_resources.sh:0:0-0:0)
-   - **Windows**: [setup_resources.bat](cci:7://file:///Users/tuxol/Documents/DataVault/CST/%23Unity3D/github/Reach%20the%20Peak-Unity3D/setup_resources.bat:0:0-0:0) (run as Administrator)
-4. Open project in Unity 2022.3 LTS
-5. Open `Assets/Scenes/Main Scene.unity` and press Play
+Players need to control the character to follow the guidance of gold coins, avoid obstacles, obtain gold coins, keep moving forward, and finally reach the finish line.
 
 ## Controls
 
 - **Move**: WASD/Arrow Keys
 - **Yaw**: QE
 - **Jump**: Spacebar
+
+
+## Project Structure
+
+```
+Assets/
+├── Scenes/          # Game scenes
+├── Scripts/         # C# scripts
+├── Animations/      # Character animations
+├── Audio/           # Audio files
+├── Effects/         # Particle effects
+└── Prefabs/         # Prefabs
+Packages/            # Unity package dependencies
+ProjectSettings/     # Unity project settings
+实验报告.pdf         # Lab report
+```
+
+## Setup
+
+1. Clone this repository
+2. Open project in Unity 2022.3 LTS
+3. Open `Assets/Scenes/Main Scene.unity` and press Play
+
