@@ -9,6 +9,21 @@ public class Hazard : MonoBehaviour
     [Tooltip("玩家标签（用于识别玩家）")]
     public string playerTag = "Player";
     
+    [Header("音效设置")]
+    [Tooltip("陷阱触发音效")]
+    public AudioClip hazardSound;
+    
+    [Range(0f, 1f)]
+    [Tooltip("音效音量")]
+    public float soundVolume = 0.8f;
+    
+    [Header("特效设置")]
+    [Tooltip("陷阱触发特效")]
+    public GameObject hazardEffectPrefab;
+    
+    [Tooltip("特效自动销毁时间（秒）")]
+    public float effectDestroyTime = 2f;
+    
     [Header("调试信息")]
     [Tooltip("显示调试日志")]
     public bool showDebugLog = true;
@@ -17,11 +32,22 @@ public class Hazard : MonoBehaviour
     [Tooltip("UI管理器引用（可选，不设置将自动查找场景中的UIManager）")]
     public UIManager uiManager;
     
+    private AudioSource audioSource;
+    
     void Awake()
     {
         if (uiManager == null)
         {
             uiManager = FindObjectOfType<UIManager>();
+        }
+        
+        // 获取或添加AudioSource组件
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f; // 2D音效
         }
     }
     
@@ -43,6 +69,12 @@ public class Hazard : MonoBehaviour
             
             if (playerController != null)
             {
+                // 播放陷阱音效
+                PlayHazardSound();
+                
+                // 播放陷阱特效
+                PlayHazardEffect(other.transform.position);
+                
                 // 触发玩家重生
                 playerController.Respawn();
                 
@@ -56,6 +88,29 @@ public class Hazard : MonoBehaviour
             {
                 Debug.LogError("Hazard: 玩家对象上未找到PlayerController组件！");
             }
+        }
+    }
+    
+    /// <summary>
+    /// 播放陷阱音效
+    /// </summary>
+    private void PlayHazardSound()
+    {
+        if (audioSource != null && hazardSound != null)
+        {
+            audioSource.PlayOneShot(hazardSound, soundVolume);
+        }
+    }
+    
+    /// <summary>
+    /// 播放陷阱特效
+    /// </summary>
+    private void PlayHazardEffect(Vector3 position)
+    {
+        if (hazardEffectPrefab != null)
+        {
+            GameObject effect = Instantiate(hazardEffectPrefab, position, Quaternion.identity);
+            Destroy(effect, effectDestroyTime);
         }
     }
     

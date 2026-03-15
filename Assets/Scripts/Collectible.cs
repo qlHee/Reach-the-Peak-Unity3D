@@ -84,15 +84,19 @@ public class Collectible : MonoBehaviour
     {
         if (pickupEffect != null)
         {
-            // 在拾取位置生成特效
-            GameObject effect = Instantiate(pickupEffect, transform.position, Quaternion.identity);
+            // 在拾取位置生成特效（稍微抬高一点，更明显）
+            Vector3 effectPosition = transform.position + Vector3.up * 0.5f;
+            GameObject effect = Instantiate(pickupEffect, effectPosition, Quaternion.identity);
             
             // 自动销毁特效对象，避免内存泄漏
             Destroy(effect, effectDestroyTime);
+            
+            Debug.Log($"✓ 播放金币拾取特效：{pickupEffect.name}，位置：{effectPosition}");
         }
         else
         {
-            Debug.LogWarning($"金币 {gameObject.name} 未设置拾取特效！");
+            Debug.LogWarning($"⚠ 金币 '{gameObject.name}' 未设置拾取特效！请在Inspector中指定特效预制体。");
+            Debug.LogWarning("→ 解决方法：将特效预制体拖入 Collectible 组件的 'Pickup Effect' 字段");
         }
     }
     

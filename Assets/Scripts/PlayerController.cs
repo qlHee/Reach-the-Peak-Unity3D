@@ -33,6 +33,24 @@ public class PlayerController : MonoBehaviour
     [Tooltip("重力值")]
     public float gravity = -9.81f;
     
+    [Header("音效设置")]
+    [Tooltip("跳跃音效")]
+    public AudioClip jumpClip;
+    
+    [Tooltip("落地音效")]
+    public AudioClip landClip;
+    
+    [Range(0f, 1f)]
+    [Tooltip("音效音量")]
+    public float soundVolume = 0.8f;
+    
+    [Header("特效设置")]
+    [Tooltip("落地尘土特效")]
+    public GameObject landEffectPrefab;
+    
+    [Tooltip("特效自动销毁时间（秒）")]
+    public float effectDestroyTime = 2f;
+    
     [Header("调试设置")]
     [Tooltip("是否显示屏幕调试信息")]
     public bool showDebugInfo = true;
@@ -41,6 +59,7 @@ public class PlayerController : MonoBehaviour
     private CharacterController characterController;
     private Transform cameraTransform;
     private Animator anim;
+    private AudioSource audioSource;
     
     // 移动相关变量
     private Vector3 velocity;
@@ -54,6 +73,9 @@ public class PlayerController : MonoBehaviour
     // 重生相关变量
     private Vector3 spawnPosition;
     private Quaternion spawnRotation;
+    
+    // 落地检测
+    private bool wasGrounded = false;
     
     void Start()
     {
@@ -80,6 +102,15 @@ public class PlayerController : MonoBehaviour
         {
             Debug.LogWarning("PlayerController: 未找到Animator组件，动画将无法播放");
         }
+        
+        // 获取或添加AudioSource组件
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 0f; // 2D音效
+        }
 
         // 记录初始位置和旋转（用于重生）
         spawnPosition = transform.position;
@@ -99,6 +130,9 @@ public class PlayerController : MonoBehaviour
             currentAnimSpeed = currentMoveSpeed * animationSpeedMultiplier;
             anim.SetFloat("Speed", currentAnimSpeed);
         }
+        
+        // 检测落地
+        CheckLanding();
 
         if (Input.GetKeyDown(KeyCode.G))
         {
@@ -185,6 +219,9 @@ public class PlayerController : MonoBehaviour
                 {
                     anim.SetTrigger("Jump");
                 }
+                
+                // 播放跳跃音效
+                PlayJumpSound();
             }
         }
         
@@ -240,6 +277,55 @@ public class PlayerController : MonoBehaviour
         spawnPosition = newSpawnPosition;
         spawnRotation = transform.rotation;
         Debug.Log($"重生点已更新到：{spawnPosition}");
+    }
+    
+    /// <summary>
+    /// 播放跳跃音效
+    /// </summary>
+    private void PlayJumpSound()
+    {
+        if (audioSource != null && jumpClip != null)
+        {
+            audioSource.PlayOneShot(jumpClip, soundVolume);
+        }
+    }
+    
+    /// <summary>
+    /// 播放落地音效
+    /// </summary>
+    private void PlayLandSound()
+    {
+        if (audioSource != null && landClip != null)
+        {
+            audioSource.PlayOneShot(landClip, soundVolume);
+        }
+    }
+    
+    /// <summary>
+    /// 播放落地特效
+    /// </summary>
+    private void PlayLandEffect()
+    {
+        if (landEffectPrefab != null)
+        {
+            GameObject effect = Instantiate(landEffectPrefab, transform.position, Quaternion.identity);
+            Destroy(effect, effectDestroyTime);
+        }
+    }
+    
+    /// <summary>
+    /// 检测落地
+    /// </summary>
+    private void CheckLanding()
+    {
+        // 如果从空中落到地面
+        if (!wasGrounded && characterController.isGrounded)
+        {
+            PlayLandSound();
+            PlayLandEffect();
+        }
+        
+        wasGrounded = characterController.isGrounded;
     }
     
     /// <summary>
