@@ -23,7 +23,7 @@ Assets/
 └── Prefabs/         # Prefabs
 Packages/            # Unity package dependencies
 ProjectSettings/     # Unity project settings
-实验报告.pdf         # Lab report
+实验报告/             # 实验报告
 ```
 
 ## Setup
