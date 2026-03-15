@@ -85,9 +85,10 @@ public class UIManager : MonoBehaviour
             winPanel.SetActive(false);
         }
 
-        // 隐藏阶段提示文本
+        // 隐藏阶段提示文本并保存原始颜色
         if (phaseText != null)
         {
+            phaseTextOriginalColor = phaseText.color;
             phaseText.gameObject.SetActive(false);
         }
     }
@@ -174,11 +175,25 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    // 保存阶段提示的原始颜色
+    private Color phaseTextOriginalColor;
+
     /// <summary>
     /// 显示阶段提示信息（不会暂停游戏）
     /// </summary>
     /// <param name="message">提示信息内容，例如 "Phase2: Middle"</param>
     public void ShowPhaseMessage(string message)
+    {
+        ShowPhaseMessage(message, phaseTextOriginalColor, phaseDisplayDuration);
+    }
+
+    /// <summary>
+    /// 显示阶段提示信息（支持自定义颜色和时长）
+    /// </summary>
+    /// <param name="message">提示信息内容</param>
+    /// <param name="color">文字颜色</param>
+    /// <param name="duration">显示时长（秒）</param>
+    public void ShowPhaseMessage(string message, Color color, float duration)
     {
         if (phaseText == null)
         {
@@ -187,10 +202,11 @@ public class UIManager : MonoBehaviour
         }
 
         phaseText.text = message;
+        phaseText.color = color;
         phaseText.gameObject.SetActive(true);
 
         CancelInvoke(nameof(HidePhaseMessage));
-        Invoke(nameof(HidePhaseMessage), phaseDisplayDuration);
+        Invoke(nameof(HidePhaseMessage), duration);
     }
 
     /// <summary>

@@ -36,6 +36,12 @@ public class GameManager : MonoBehaviour
     [Tooltip("背景音乐 AudioSource（拖入 BGMplayer 上的 AudioSource）")]
     public AudioSource bgmAudioSource;
 
+    [Tooltip("阶段二的背景音乐")]
+    public AudioClip middlePhaseBGM;
+
+    [Tooltip("阶段三的背景音乐")]
+    public AudioClip endPhaseBGM;
+
     [Header("UI管理器引用")]
     [Tooltip("拖入UIManager组件")]
     public UIManager uiManager;
@@ -44,8 +50,23 @@ public class GameManager : MonoBehaviour
     [Tooltip("收集完成后的提示信息")]
     public string completionMessage = "All coins have been collected!";
 
+    [Header("环境光设置")]
+    [Tooltip("阶段二的环境光颜色（橘红色）")]
+    public Color middlePhaseAmbientColor = new Color(1f, 0.4f, 0.2f, 1f);
+
+    [Tooltip("阶段三的环境光颜色（黑夜效果）")]
+    public Color endPhaseAmbientColor = new Color(0.15f, 0.15f, 0.25f, 1f);
+
+    // 保存初始环境光设置
+    private UnityEngine.Rendering.AmbientMode originalAmbientMode;
+    private Color originalAmbientSkyColor;
+
     void Start()
     {
+        // 保存初始环境光设置
+        originalAmbientMode = RenderSettings.ambientMode;
+        originalAmbientSkyColor = RenderSettings.ambientSkyColor;
+
         // 初始化UI显示
         if (uiManager != null)
         {
@@ -123,7 +144,7 @@ public class GameManager : MonoBehaviour
         currentPhase = newPhase;
         Debug.Log($"关卡阶段切换为：{currentPhase}");
 
-        // 根据阶段调整背景音乐播放速率（使用 pitch 实现）
+        // 根据阶段切换背景音乐
         if (bgmAudioSource != null)
         {
             switch (currentPhase)
@@ -132,12 +153,30 @@ public class GameManager : MonoBehaviour
                     bgmAudioSource.pitch = 1f;
                     break;
                 case LevelPhase.Middle:
-                    // 需求：Middle 阶段播放速率 1.2 倍
+                    // 切换到阶段二背景音乐
+                    if (middlePhaseBGM != null)
+                    {
+                        bgmAudioSource.clip = middlePhaseBGM;
+                        bgmAudioSource.loop = true;
+                        bgmAudioSource.Play();
+                    }
                     bgmAudioSource.pitch = 1.2f;
+                    // 激活所有移动平台
+                    ActivateAllMovingPlatforms();
+                    // 设置阶段二环境光（橘红色）
+                    SetAmbientColor(middlePhaseAmbientColor);
                     break;
                 case LevelPhase.End:
-                    // 需求：End 阶段播放速率 1.4 倍
+                    // 切换到阶段三背景音乐
+                    if (endPhaseBGM != null)
+                    {
+                        bgmAudioSource.clip = endPhaseBGM;
+                        bgmAudioSource.loop = true;
+                        bgmAudioSource.Play();
+                    }
                     bgmAudioSource.pitch = 1.4f;
+                    // 设置阶段三环境光（黑夜效果）
+                    SetAmbientColor(endPhaseAmbientColor);
                     break;
             }
         }
@@ -155,10 +194,10 @@ public class GameManager : MonoBehaviour
                     uiManager.ShowPhaseMessage("Phase1: Start");
                     break;
                 case LevelPhase.Middle:
-                    uiManager.ShowPhaseMessage("Phase2: Middle");
+                    uiManager.ShowPhaseMessage("Phase2: Middle", Color.red, 3f);
                     break;
                 case LevelPhase.End:
-                    uiManager.ShowPhaseMessage("Phase3: End");
+                    uiManager.ShowPhaseMessage("Phase3: End", Color.red, 3f);
                     break;
             }
         }
@@ -179,6 +218,28 @@ public class GameManager : MonoBehaviour
         
         // 触发"开启终点门"事件
         OpenExitDoor();
+    }
+
+    /// <summary>
+    /// 设置环境光颜色（切换到Flat模式）
+    /// </summary>
+    private void SetAmbientColor(Color color)
+    {
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientSkyColor = color;
+    }
+
+    /// <summary>
+    /// 激活所有移动平台
+    /// </summary>
+    private void ActivateAllMovingPlatforms()
+    {
+        MovingPlatform[] platforms = FindObjectsOfType<MovingPlatform>();
+        foreach (MovingPlatform platform in platforms)
+        {
+            platform.Activate();
+        }
+        Debug.Log($"已激活 {platforms.Length} 个移动平台");
     }
 
     /// <summary>

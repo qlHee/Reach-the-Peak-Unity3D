@@ -27,6 +27,11 @@ public class MovingPlatform : MonoBehaviour
     private bool movingToB = true;
     private float journeyProgress = 0f;
     
+    /// <summary>
+    /// 平台是否已激活（开始移动）
+    /// </summary>
+    private bool isActivated = false;
+    
     void Start()
     {
         // 记录初始位置
@@ -38,10 +43,16 @@ public class MovingPlatform : MonoBehaviour
         
         // 将平台设置到起始位置
         transform.position = pointA;
+        
+        // 默认不启动移动
+        isActivated = false;
     }
     
     void Update()
     {
+        // 未激活时不移动
+        if (!isActivated) return;
+        
         if (useSmoothMovement)
         {
             MoveSmoothly();
@@ -50,6 +61,14 @@ public class MovingPlatform : MonoBehaviour
         {
             MoveLinearly();
         }
+    }
+    
+    /// <summary>
+    /// 激活平台，开始移动
+    /// </summary>
+    public void Activate()
+    {
+        isActivated = true;
     }
     
     /// <summary>
