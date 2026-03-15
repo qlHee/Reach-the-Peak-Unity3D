@@ -10,6 +10,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("角色旋转速度")]
     public float rotationSpeed = 10f;
     
+    [Tooltip("按键旋转速度（Q/E键）")]
+    public float keyRotationSpeed = 90f;
+    
     [Header("跳跃设置")]
     [Tooltip("跳跃高度")]
     public float jumpHeight = 2f;
@@ -62,49 +65,44 @@ public class PlayerController : MonoBehaviour
     /// </summary>
     void HandleMovement()
     {
-        // 1. 读取输入轴
+        // 1. 处理Q/E键旋转
+        if (Input.GetKey(KeyCode.Q))
+        {
+            // 按Q键向左旋转
+            transform.Rotate(0f, -keyRotationSpeed * Time.deltaTime, 0f);
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            // 按E键向右旋转
+            transform.Rotate(0f, keyRotationSpeed * Time.deltaTime, 0f);
+        }
+        
+        // 2. 读取输入轴
         float horizontal = Input.GetAxis("Horizontal"); // A/D 或 左/右方向键
         float vertical = Input.GetAxis("Vertical");     // W/S 或 上/下方向键
         
-        // 2. 计算移动方向（相对于相机）
+        // 3. 计算移动方向（相对于Player自身朝向）
         moveDirection = Vector3.zero;
         
-        if (cameraTransform != null)
-        {
-            // 获取相机的前方和右方向（忽略Y轴，保持在水平面）
-            Vector3 cameraForward = cameraTransform.forward;
-            Vector3 cameraRight = cameraTransform.right;
-            
-            // 将方向投影到水平面上（Y=0）
-            cameraForward.y = 0f;
-            cameraRight.y = 0f;
-            
-            // 归一化方向向量
-            cameraForward.Normalize();
-            cameraRight.Normalize();
-            
-            // 计算相对于相机的移动方向
-            moveDirection = cameraForward * vertical + cameraRight * horizontal;
-        }
-        else
-        {
-            // 如果没有相机，使用世界坐标系
-            moveDirection = new Vector3(horizontal, 0f, vertical);
-        }
+        // 使用Player自身的前方和右方向
+        Vector3 playerForward = transform.forward;
+        Vector3 playerRight = transform.right;
         
-        // 3. 旋转角色面向移动方向
+        // 将方向投影到水平面上（Y=0）
+        playerForward.y = 0f;
+        playerRight.y = 0f;
+        
+        // 归一化方向向量
+        playerForward.Normalize();
+        playerRight.Normalize();
+        
+        // 计算相对于Player朝向的移动方向
+        moveDirection = playerForward * vertical + playerRight * horizontal;
+        
+        // 4. 归一化移动方向，避免斜向移动时速度过快
         if (moveDirection.magnitude >= 0.1f)
         {
-            // 归一化移动方向，避免斜向移动时速度过快
             moveDirection.Normalize();
-            
-            // 旋转角色面向移动方向
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation, 
-                targetRotation, 
-                rotationSpeed * Time.deltaTime
-            );
         }
     }
     

@@ -56,18 +56,8 @@ public class CameraFollow : MonoBehaviour
     void HandlePositionFollow()
     {
         // 计算目标位置（目标位置 + 偏移量）
-        Vector3 targetPosition;
-        
-        if (followRotation)
-        {
-            // 如果跟随旋转，则偏移量也要随着目标旋转
-            targetPosition = target.position + target.TransformDirection(offset);
-        }
-        else
-        {
-            // 不跟随旋转，偏移量为世界坐标系
-            targetPosition = target.position + offset;
-        }
+        // 偏移量随着目标旋转，实现摄像机以Player为中心旋转
+        Vector3 targetPosition = target.position + target.TransformDirection(offset);
         
         // 使用Lerp插值实现平滑移动
         if (positionSmoothSpeed > 0f)
@@ -84,6 +74,9 @@ public class CameraFollow : MonoBehaviour
             // 如果平滑速度为0，直接设置位置（无平滑）
             transform.position = targetPosition;
         }
+        
+        // 摄像机始终看向Player
+        transform.LookAt(target.position);
     }
     
     /// <summary>
@@ -136,4 +129,7 @@ public class CameraFollow : MonoBehaviour
         Gizmos.DrawLine(target.position, target.position + offsetDirection);
     }
 }
+
+
+
 

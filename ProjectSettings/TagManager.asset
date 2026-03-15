@@ -8,6 +8,7 @@ TagManager:
   - Platform
   - Collectibles_Group
   - Traps_Group
+  - ExitDoor
   layers:
   - Default
   - TransparentFX
