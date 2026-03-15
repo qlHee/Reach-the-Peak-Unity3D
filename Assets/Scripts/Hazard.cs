@@ -13,18 +13,6 @@ public class Hazard : MonoBehaviour
     [Tooltip("显示调试日志")]
     public bool showDebugLog = true;
     
-    [Header("UI设置")]
-    [Tooltip("UI管理器引用（可选，不设置将自动查找场景中的UIManager）")]
-    public UIManager uiManager;
-    
-    void Awake()
-    {
-        if (uiManager == null)
-        {
-            uiManager = FindObjectOfType<UIManager>();
-        }
-    }
-    
     /// <summary>
     /// 当触发器被进入时调用
     /// </summary>
@@ -45,12 +33,13 @@ public class Hazard : MonoBehaviour
             {
                 // 触发玩家重生
                 playerController.Respawn();
-                
-                 // 显示陷阱提示
-                if (uiManager != null)
-                {
-                    uiManager.ShowTrapHint("You're in a trap!");
-                }
+				
+				// UI提示：碰到陷阱
+				UIManager ui = FindObjectOfType<UIManager>();
+				if (ui != null)
+				{
+					ui.ShowHint("小心！你触发了陷阱！", 1.5f);
+				}
             }
             else
             {
