@@ -1,7 +1,5 @@
 # Reach the Peak - Unity3D
 
-This is a Unity3D game and one of my personal assignments for the Computer Graphics and Game Development course.
-
 Players need to control the character to follow the guidance of gold coins, avoid obstacles, obtain gold coins, keep climbing forward, and finally reach the Peak.
 
 ## Controls
